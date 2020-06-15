@@ -1,22 +1,25 @@
 package com.example.cathdev;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class MainActivity extends AppCompatActivity implements BottomNavigationView.OnNavigationItemSelectedListener {
 
-    BottomNavigationView bottomNavigationView;
-
+   private BottomNavigationView bottomNavigationView;
     private SharedPrefrencesHelper sharedPrefrencesHelper;
+
     TextView firstname, lastname, usernamee, email;
     Button logoutBtn;
     @Override
@@ -25,10 +28,13 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
         setContentView(R.layout.activity_main);
         sharedPrefrencesHelper = new SharedPrefrencesHelper(this);
         String username = sharedPrefrencesHelper.getUsername();
+
         if (username == null || username.isEmpty()) {
             startActivity(new Intent(this, LoginActivity.class));
             finish();
         }
+
+        showAlertDialog();
         /*
         firstname = findViewById(R.id.firstname);
         lastname = findViewById(R.id.lastname);
@@ -79,5 +85,58 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
 
         }
         return false;
+    }
+
+    private void showAlertDialog() {
+        final AlertDialog.Builder alertDialog = new AlertDialog.Builder(MainActivity.this);
+
+        alertDialog.setTitle("Are you infected with Covid-19");
+        final String[] items = {"Yes","No","Not Sure"};
+        final int checkedItem = 1;
+
+        alertDialog.setPositiveButton("Apply", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        alertDialog.setSingleChoiceItems(items, checkedItem, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                switch (which) {
+                                    case 0:
+                                        Toast.makeText(MainActivity.this, "Selected :  Yes", Toast.LENGTH_LONG).show();
+                                        break;
+                                    case 1:
+                                        dialog.dismiss();
+
+                                        break;
+                                    case 2:
+                                        Toast.makeText(MainActivity.this, "Selected : Not Sure", Toast.LENGTH_LONG).show();
+                                        break;
+
+                                }
+                            }
+                        });
+                    }
+                });
+
+                alertDialog.setSingleChoiceItems(items, checkedItem, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        switch (which) {
+                            case 0:
+                                Toast.makeText(MainActivity.this, "Selected :  Yes", Toast.LENGTH_LONG).show();
+                                break;
+                            case 1:
+                                Toast.makeText(MainActivity.this, "Selected : No", Toast.LENGTH_LONG).show();
+                                break;
+                            case 2:
+                                Toast.makeText(MainActivity.this, "Selected : Not Sure", Toast.LENGTH_LONG).show();
+                                break;
+
+                        }
+                    }
+                });
+        AlertDialog alert = alertDialog.create();
+        alert.setCanceledOnTouchOutside(false);
+        alert.show();
     }
 }

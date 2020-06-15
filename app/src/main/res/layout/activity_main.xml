@@ -5,7 +5,7 @@
     android:id="@+id/linearLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".BottomNav">
+    tools:context=".MainActivity">
 
     <FrameLayout
         android:id="@+id/fragment_container"
@@ -16,7 +16,23 @@
         app:layout_constraintBottom_toTopOf="@+id/bottomNavigationView"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent">
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/check_FAB"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+
+            android:layout_margin="32dp"
+            android:outlineAmbientShadowColor="@color/dark_blue"
+            android:scrollbarAlwaysDrawHorizontalTrack="true"
+            android:src="@drawable/locations"
+            app:backgroundTint="#DE1B55"
+            tools:ignore="MissingConstraints" />
+
+
+    </FrameLayout>
 
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottomNavigationView"

@@ -92,16 +92,18 @@ public class LoginActivity extends AppCompatActivity {
                             JSONObject jsonObject = new JSONObject(response);
 
                             if (jsonObject.optString("success").equals("1")) {
-                                /*JSONObject jsonObject1 = jsonObject.getJSONObject("details");
-                                sharedPrefrencesHelper.setFirstname(jsonObject1.getString("firstname"));
-                                sharedPrefrencesHelper.setLastname(jsonObject1.getString("lastname"));
-                                sharedPrefrencesHelper.setUsername(jsonObject1.getString("username"));
-                                sharedPrefrencesHelper.setEmail(jsonObject1.getString("email"));
-*/
-                                Toast.makeText(LoginActivity.this, "Login Successfully! ", Toast.LENGTH_SHORT).show();
-                                startActivity(new Intent(getBaseContext(), MainActivity.class));
-                                finish();
+
+                                JSONObject jsonObject1 = jsonObject.getJSONObject("details");
+                                sharedPrefrencesHelper.setFirstname(jsonObject1.getString("FIRSTNAME"));
+                                sharedPrefrencesHelper.setLastname(jsonObject1.getString("LASTNAME"));
+                                sharedPrefrencesHelper.setUsername(jsonObject1.getString("USERNAME"));
+                                sharedPrefrencesHelper.setEmail(jsonObject1.getString("EMAIL"));
+
+                                Toast.makeText(LoginActivity.this, "Login Successfull! ", Toast.LENGTH_SHORT).show();
+                                openHome();
+
                             }else {
+
                                 Toast.makeText(LoginActivity.this, jsonObject.getString("message"), Toast.LENGTH_SHORT).show();
                             }
 
@@ -130,5 +132,10 @@ public class LoginActivity extends AppCompatActivity {
         };
        rQueue = Volley.newRequestQueue(LoginActivity.this);
         rQueue.add(stringRequest);
+    }
+
+    private void openHome(){
+        Intent i = new Intent(LoginActivity.this,MainActivity.class);
+        startActivity(i);
     }
 }

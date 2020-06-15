@@ -111,6 +111,8 @@ public class RegisterActivity<RequestQueue> extends AppCompatActivity {
                                 Toast.makeText(RegisterActivity.this, jsonObject.getString("message"), Toast.LENGTH_SHORT).show();
                             }
                         } catch (JSONException e) {
+
+
                             e.printStackTrace();
                         }
                     }
