@@ -53,6 +53,9 @@ public class LoginActivity extends AppCompatActivity {
                 loginAction();
             }
         });
+
+
+
     }
     private void loginAction() {
         final String userr = user.getText().toString();
