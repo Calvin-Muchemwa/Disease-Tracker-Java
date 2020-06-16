@@ -4,22 +4,29 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 public class MainActivity extends AppCompatActivity implements BottomNavigationView.OnNavigationItemSelectedListener {
-
+    private static final String TAG = "Maps";
+    private static final int ERROR_DIALOG_REQUEST=9001;
+    ////
    private BottomNavigationView bottomNavigationView;
     private SharedPrefrencesHelper sharedPrefrencesHelper;
-
+    /////
     TextView firstname, lastname, usernamee, email;
     Button logoutBtn;
     @Override
@@ -58,9 +65,19 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
         });*/
 
         bottomNavigationView = findViewById(R.id.bottomNavigationView);
-
         bottomNavigationView.setOnNavigationItemSelectedListener(this);
         bottomNavigationView.setSelectedItemId(R.id.nav_home);
+//////////////
+
+        FloatingActionButton myFab =findViewById(R.id.check_FAB);
+        myFab.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                if(isServicesOK()){
+                 Intent intent= new Intent(MainActivity.this,MapsActivity.class);
+                 startActivity(intent);
+                }
+            }
+        });
 
     }
 
@@ -138,5 +155,26 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
         AlertDialog alert = alertDialog.create();
         alert.setCanceledOnTouchOutside(false);
         alert.show();
+    }
+
+    public boolean isServicesOK(){
+        Log.d(TAG,"isServiceOK : checking google services version");
+        int available = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(MainActivity.this);
+        if (available == ConnectionResult.SUCCESS){
+            ////everything is fine and user can make map request
+            Log.d(TAG,"isServiceOK : Google Play Services is working");
+            return true;
+        }
+        else if(GoogleApiAvailability.getInstance().isUserResolvableError(available)){
+            //an error occurred we can resolve it
+            Log.d(TAG,"isServiceOK : an error occured but we can fix it");
+            Dialog dialog = GoogleApiAvailability.getInstance().getErrorDialog(MainActivity.this,available,ERROR_DIALOG_REQUEST);
+            dialog.show();
+
+        }
+        else {
+            Toast.makeText(this,"Unfortunately your device doesnt support Map Requests ",Toast.LENGTH_SHORT).show();
+        }
+        return false;
     }
 }
