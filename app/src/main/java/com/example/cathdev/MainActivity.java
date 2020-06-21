@@ -3,32 +3,46 @@ package com.example.cathdev;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
+import android.Manifest;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.Looper;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 public class MainActivity extends AppCompatActivity implements BottomNavigationView.OnNavigationItemSelectedListener {
     private static final String TAG = "Maps";
     private static final int ERROR_DIALOG_REQUEST=9001;
+    private static final int REQUEST_CODE_LOCATION_PERMISSION=1;
     ////
    private BottomNavigationView bottomNavigationView;
     private SharedPrefrencesHelper sharedPrefrencesHelper;
     /////
-    TextView firstname, lastname, usernamee, email;
+    TextView firstname, lastname, usernamee, email,textLatLong;
+    private ProgressBar progressBar;
     Button logoutBtn;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -41,7 +55,12 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
             finish();
         }
 
-        showAlertDialog();
+        showAlertDialog();// pop up
+
+
+
+
+
         /*
         firstname = findViewById(R.id.firstname);
         lastname = findViewById(R.id.lastname);
@@ -68,16 +87,17 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
         bottomNavigationView.setOnNavigationItemSelectedListener(this);
         bottomNavigationView.setSelectedItemId(R.id.nav_home);
 //////////////
-
         FloatingActionButton myFab =findViewById(R.id.check_FAB);
-        myFab.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                if(isServicesOK()){
-                 Intent intent= new Intent(MainActivity.this,MapsActivity.class);
-                 startActivity(intent);
-                }
-            }
-        });
+      myFab.setOnClickListener(new View.OnClickListener() {
+          @Override
+          public void onClick(View v) {
+              if(isServicesOK()){
+                  Intent intent= new Intent(MainActivity.this,Maps.class);
+                  startActivity(intent);
+              }
+
+          }
+      });
 
     }
 
@@ -157,24 +177,30 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
         alert.show();
     }
 
-    public boolean isServicesOK(){
-        Log.d(TAG,"isServiceOK : checking google services version");
-        int available = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(MainActivity.this);
-        if (available == ConnectionResult.SUCCESS){
-            ////everything is fine and user can make map request
-            Log.d(TAG,"isServiceOK : Google Play Services is working");
-            return true;
-        }
-        else if(GoogleApiAvailability.getInstance().isUserResolvableError(available)){
-            //an error occurred we can resolve it
-            Log.d(TAG,"isServiceOK : an error occured but we can fix it");
-            Dialog dialog = GoogleApiAvailability.getInstance().getErrorDialog(MainActivity.this,available,ERROR_DIALOG_REQUEST);
-            dialog.show();
 
-        }
-        else {
-            Toast.makeText(this,"Unfortunately your device doesnt support Map Requests ",Toast.LENGTH_SHORT).show();
+
+    //initialize the intent to mapActivity
+
+
+
+
+    public boolean isServicesOK(){
+        Log.d(TAG, "isServicesOK: checking google services version");
+        int available = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(MainActivity.this);
+        if(available== ConnectionResult.SUCCESS){
+            //everything is fine and usercan make requests
+            Log.d(TAG, "isServicesOK: Google Play Services is working");
+            return true;
+
+        }else if(GoogleApiAvailability.getInstance().isUserResolvableError(available)){
+            //an resovable error coccured
+            Log.d(TAG, "isServicesOK: an error occurred but we can fix it");
+            Dialog dialog =GoogleApiAvailability.getInstance().getErrorDialog(MainActivity.this,available,ERROR_DIALOG_REQUEST);
+            dialog.show();
+        }else{
+            Toast.makeText(this,"You cant make map requests",Toast.LENGTH_SHORT).show();
         }
         return false;
     }
+
 }
