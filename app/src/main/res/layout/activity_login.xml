@@ -103,7 +103,8 @@
         android:background="#fff"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        tools:ignore="MissingConstraints" />
+        tools:ignore="MissingConstraints"
+        android:layout_marginRight="16dp" />
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guidline_left"
@@ -112,7 +113,8 @@
         android:layout_marginStart="16dp"
         android:orientation="vertical"
         app:layout_constraintGuide_begin="24dp"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginLeft="16dp" />
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline_right"
@@ -121,5 +123,6 @@
         android:layout_marginEnd="16dp"
         android:orientation="vertical"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintGuide_end="24dp" />
+        app:layout_constraintGuide_end="24dp"
+        android:layout_marginRight="16dp" />
 </androidx.constraintlayout.widget.ConstraintLayout>

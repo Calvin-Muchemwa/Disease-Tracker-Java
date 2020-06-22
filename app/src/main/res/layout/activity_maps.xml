@@ -6,13 +6,45 @@
     android:layout_height="match_parent"
     tools:context=".Maps">
 
-    <fragment xmlns:android="http://schemas.android.com/apk/res/android"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:id="@+id/map"
-        tools:context=".MapsActivity"
-        android:name="com.google.android.gms.maps.SupportMapFragment" />
 
+    <fragment
+        android:id="@+id/map"
+        android:name="com.google.android.gms.maps.SupportMapFragment"
+        android:layout_width="396dp"
+        android:layout_height="606dp"
+
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginLeft="0dp"
+        android:layout_marginStart="0dp"
+        android:layout_marginTop="11dp"
+        tools:context=".MapsActivity" />
+    <RelativeLayout
+        android:id="@+id/belowlayout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:orientation="horizontal" >
+
+        <Button
+            android:id="@+id/Use_location"
+            android:textColorHighlight="#333333"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_gravity="right|center_horizontal"
+            android:background="#ADD8E6"
+            android:textColorHint="#333333"
+            android:layout_marginBottom="14dp"
+            android:layout_marginLeft="8dp"
+            android:layout_marginTop="14dp"
+            android:text="Use this location"
+            android:textColor="#333333" />
+
+
+
+    </RelativeLayout>
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -47,11 +79,6 @@
             android:imeOptions="actionSearch"/>
 
 
-
-
-
-
-
     </RelativeLayout>
 
     <ImageView
@@ -65,5 +92,8 @@
         android:id="@+id/ic_gps"
         android:src="@drawable/ic_gps"
         />
+
+
+
 
 </RelativeLayout>
