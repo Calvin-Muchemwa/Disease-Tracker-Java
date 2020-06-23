@@ -7,7 +7,7 @@ public class SharedPrefrencesHelper {
 
     private SharedPreferences sharedPreferences;
     private Context context;
-    private String firstname = "firstname", lastname = "lastname", username = "username", email = "email";
+    private String firstname = "firstname", lastname = "lastname", username = "username", email = "email",isInfected="YES/NO/NOT SURE";
     public SharedPrefrencesHelper(Context context) {
         this.sharedPreferences = context.getSharedPreferences("login_session",
                 Context.MODE_PRIVATE);
@@ -25,6 +25,17 @@ public class SharedPrefrencesHelper {
     public String getEmail() {
         return sharedPreferences.getString(email, "");
     }
+    public String  getIsInfected(){ return sharedPreferences.getString(isInfected,"");}
+
+    public void setIsInfected(String isInfected) {
+        SharedPreferences.Editor edit = sharedPreferences.edit();
+        edit.putString(String.valueOf(this.isInfected), isInfected);
+        edit.commit();
+    }
+
+
+
+
     public void setFirstname(String firstname) {
         SharedPreferences.Editor edit = sharedPreferences.edit();
         edit.putString(this.firstname, firstname);

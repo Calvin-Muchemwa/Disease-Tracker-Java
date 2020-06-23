@@ -1,5 +1,6 @@
 package com.example.cathdev;
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Geocoder;
@@ -10,11 +11,17 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -34,10 +41,15 @@ import com.google.android.libraries.places.api.net.PlacesClient;
 import com.google.android.libraries.places.widget.AutocompleteSupportFragment;
 import com.google.android.libraries.places.widget.listener.PlaceSelectionListener;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -46,7 +58,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 public class Maps extends AppCompatActivity implements OnMapReadyCallback {
-
+    private com.android.volley.RequestQueue rQueue;
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
@@ -61,14 +73,20 @@ public class Maps extends AppCompatActivity implements OnMapReadyCallback {
             }
             mMap.setMyLocationEnabled(true);
             mMap.getUiSettings().setMyLocationButtonEnabled(false);
-            init();
 
+
+            Use_location.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    UseLocation();
+                }
+            });
 
 
         }
 
     }
-
+    private SharedPrefrencesHelper sharedPrefrencesHelper;
     private static final String TAG = "MapActivity";
     private static final int LOCATION_PERMISSION_REQUEST_CODE=1234;
     private static final String FINE_LOCATION=Manifest.permission.ACCESS_FINE_LOCATION;
@@ -80,6 +98,13 @@ public class Maps extends AppCompatActivity implements OnMapReadyCallback {
     private FusedLocationProviderClient mFusedLocationProviderClient;
     private GoogleMap mMap;
     private PlacesClient placesClient;
+    private static String url="https://lamp.ms.wits.ac.za/home/s2115284/projloginn/Check_In.php";
+    private Button Use_location;
+    String Longitude="";
+    String Latitude="";
+    String email;
+    String isInfected="";
+
 
     private ImageView mGps;
     private String apiKey= "AIzaSyBvg3J7NuFFI27RFm3o-7wRuLiUL3B1IUM";
@@ -93,9 +118,14 @@ public class Maps extends AppCompatActivity implements OnMapReadyCallback {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
-        mSearchText=(EditText)findViewById(R.id.input_search);
+        sharedPrefrencesHelper = new SharedPrefrencesHelper(this);
+        //mSearchText=(EditText)findViewById(R.id.input_search);
         mGps=(ImageView) findViewById(R.id.ic_gps);
+        Use_location =(Button) findViewById(R.id.Use_location);
         getLocationPermission();
+        InitializePlaces();
+
+
 
 
     }
@@ -132,6 +162,8 @@ public class Maps extends AppCompatActivity implements OnMapReadyCallback {
 
         MarkerOptions options = new MarkerOptions().position(latlng).title(title);
         mMap.addMarker(options);
+         Latitude =String.valueOf(latlng.latitude);
+         Longitude = String.valueOf(latlng.longitude);
 
         hideSoftKeyboard();
     }
@@ -166,7 +198,7 @@ public class Maps extends AppCompatActivity implements OnMapReadyCallback {
         }
 
     }
-    private void init(){
+    /*private void init(){
         Log.d(TAG, "init: Initializing");
 
         mSearchText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
@@ -191,6 +223,8 @@ public class Maps extends AppCompatActivity implements OnMapReadyCallback {
         });
         hideSoftKeyboard();
     }
+
+     */
 
     private void hideSoftKeyboard(){
         this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
@@ -243,7 +277,7 @@ public class Maps extends AppCompatActivity implements OnMapReadyCallback {
 
         }
         placesClient=Places.createClient(this);
-        final AutocompleteSupportFragment autocompleteSupportFragment=(AutocompleteSupportFragment) getSupportFragmentManager().findFragmentById(R.id.input_search);
+        final AutocompleteSupportFragment autocompleteSupportFragment=(AutocompleteSupportFragment) getSupportFragmentManager().findFragmentById(R.id.place_autocomplete_fragment);
 
         assert autocompleteSupportFragment != null;
         autocompleteSupportFragment.setPlaceFields(Arrays.asList(Place.Field.ID,Place.Field.LAT_LNG,Place.Field.NAME));
@@ -260,5 +294,75 @@ public class Maps extends AppCompatActivity implements OnMapReadyCallback {
 
             }
         });
+        mGps.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.d(TAG, "onClick: clicked gps icon");
+                getDeviceLocation();
+            }
+        });
+        hideSoftKeyboard();
     }
-}
+
+    private void UseLocation(){
+
+        Log.d(TAG, "UseLocation: LOngitude : "+Longitude);
+
+        String email = sharedPrefrencesHelper.getEmail();
+
+        StringRequest stringRequest = new StringRequest(Request.Method.POST, url,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        rQueue.getCache().clear();
+
+
+
+                            try {
+
+                                response = response.replaceFirst("<font>.*?</font>", "");
+                                int jsonStart = response.indexOf("{");
+                                int jsonEnd = response.lastIndexOf("}");
+
+                                if (jsonStart >= 0 && jsonEnd >= 0 && jsonEnd > jsonStart) {
+                                    response = response.substring(jsonStart, jsonEnd + 1);
+                                }
+                                Log.i("tagconvertstr", "["+response+"]");
+                                JSONObject jsonObject = new JSONObject(response);
+                                if (jsonObject.optString("success").equals("1")) {
+                                    Toast.makeText(Maps.this, "Check in has been logged", Toast.LENGTH_SHORT).show();
+                                    //startActivity(new Intent(getBaseContext(), LoginActivity.class));
+                                    //finish();
+                                } else {
+                                    Toast.makeText(Maps.this, jsonObject.getString("message"), Toast.LENGTH_SHORT).show();
+                                }
+                            } catch (JSONException e) {
+
+
+                            e.printStackTrace();
+                        }
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Toast.makeText(Maps.this, error.toString(), Toast.LENGTH_LONG).show();
+                    }
+                }) {
+            @Override
+            protected Map<String, String> getParams() {
+                isInfected =sharedPrefrencesHelper.getIsInfected();
+                Map<String, String> params = new HashMap<String, String>();
+                params.put("latitude", Latitude);
+                params.put("longitude", Longitude);
+                params.put("email", email);
+                Log.d(TAG, "getParams: "+ isInfected);
+                params.put("isInfected",isInfected);
+                return params;
+            }
+        };
+        rQueue = Volley.newRequestQueue(Maps.this);
+        rQueue.add(stringRequest);
+    }
+    }
+

@@ -106,6 +106,8 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
     Account accountfragment= new Account();
     Screening screeningfragment= new Screening();
 
+
+
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
 
@@ -123,55 +125,52 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
         }
         return false;
     }
-
+String selection;
     private void showAlertDialog() {
         final AlertDialog.Builder alertDialog = new AlertDialog.Builder(MainActivity.this);
 
         alertDialog.setTitle("Are you infected with Covid-19");
         final String[] items = {"Yes","No","Not Sure"};
-        final int checkedItem = 1;
+        final int checkedItem = -1;
+
+        alertDialog.setSingleChoiceItems(items, checkedItem, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                selection = items[which];
+
+            }
+        });
 
         alertDialog.setPositiveButton("Apply", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        alertDialog.setSingleChoiceItems(items, checkedItem, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                switch (which) {
-                                    case 0:
-                                        Toast.makeText(MainActivity.this, "Selected :  Yes", Toast.LENGTH_LONG).show();
-                                        break;
-                                    case 1:
-                                        dialog.dismiss();
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                // user clicked OK
+                switch (selection) {
+                    case ("Yes"):
+                        Toast.makeText(MainActivity.this, "Selected :  Yes", Toast.LENGTH_LONG).show();
+                        sharedPrefrencesHelper.setIsInfected(selection);
+                        Intent intent= new Intent(MainActivity.this,Maps.class);
+                        startActivity(intent);
+                        break;
+                    case ("No"):
+                        Toast.makeText(MainActivity.this, "Selected :  NO", Toast.LENGTH_LONG).show();
+                        sharedPrefrencesHelper.setIsInfected(selection);
+                        //Intent intent2 = new Intent(MainActivity.this,Maps.class);
+                        //startActivity(intent2);
+                         dialog.dismiss();
 
-                                        break;
-                                    case 2:
-                                        Toast.makeText(MainActivity.this, "Selected : Not Sure", Toast.LENGTH_LONG).show();
-                                        break;
+                        break;
+                    case ("Not Sure"):
 
-                                }
-                            }
-                        });
-                    }
-                });
+                        sharedPrefrencesHelper.setIsInfected(selection);
+                        Toast.makeText(MainActivity.this, "Selected : Not Sure", Toast.LENGTH_LONG).show();
+                        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,screeningfragment).commit();
+                        break;
+                }
+            }
+        });
 
-                alertDialog.setSingleChoiceItems(items, checkedItem, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        switch (which) {
-                            case 0:
-                                Toast.makeText(MainActivity.this, "Selected :  Yes", Toast.LENGTH_LONG).show();
-                                break;
-                            case 1:
-                                Toast.makeText(MainActivity.this, "Selected : No", Toast.LENGTH_LONG).show();
-                                break;
-                            case 2:
-                                Toast.makeText(MainActivity.this, "Selected : Not Sure", Toast.LENGTH_LONG).show();
-                                break;
 
-                        }
-                    }
-                });
         AlertDialog alert = alertDialog.create();
         alert.setCanceledOnTouchOutside(false);
         alert.show();
