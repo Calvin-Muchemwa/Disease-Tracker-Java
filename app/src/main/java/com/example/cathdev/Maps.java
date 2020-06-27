@@ -1,10 +1,16 @@
 package com.example.cathdev;
 import android.Manifest;
+import android.annotation.SuppressLint;
+import android.app.DatePickerDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -12,14 +18,17 @@ import android.view.View;
 import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
+import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.Request;
+import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -41,18 +50,29 @@ import com.google.android.libraries.places.api.net.PlacesClient;
 import com.google.android.libraries.places.widget.AutocompleteSupportFragment;
 import com.google.android.libraries.places.widget.listener.PlaceSelectionListener;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.time.DateTimeException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -68,17 +88,33 @@ public class Maps extends AppCompatActivity implements OnMapReadyCallback {
         if (mLocationPermissionGranted) {
             getDeviceLocation();
 
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            if(ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
 
             }
             mMap.setMyLocationEnabled(true);
             mMap.getUiSettings().setMyLocationButtonEnabled(false);
 
+            showAlertDialog();
 
             Use_location.setOnClickListener(new View.OnClickListener() {
+                @RequiresApi(api = Build.VERSION_CODES.O)
                 @Override
                 public void onClick(View v) {
-                    UseLocation();
+
+                    try {
+                        UseLocation();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+
+                    try {
+                        getResultData();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+
                 }
             });
 
@@ -87,6 +123,7 @@ public class Maps extends AppCompatActivity implements OnMapReadyCallback {
 
     }
     private SharedPrefrencesHelper sharedPrefrencesHelper;
+    private DatePickerDialog.OnDateSetListener mDateSetListener;
     private static final String TAG = "MapActivity";
     private static final int LOCATION_PERMISSION_REQUEST_CODE=1234;
     private static final String FINE_LOCATION=Manifest.permission.ACCESS_FINE_LOCATION;
@@ -94,17 +131,20 @@ public class Maps extends AppCompatActivity implements OnMapReadyCallback {
     private static final float DEFAULT_ZOOM=15f;
     private static final LatLngBounds LAT_LNG_BOUNDS=new LatLngBounds(new LatLng(-40,-168),new LatLng(71,136));
     //variables
+    private List<Results_Data>list_data;
     private Boolean mLocationPermissionGranted= false;
     private FusedLocationProviderClient mFusedLocationProviderClient;
     private GoogleMap mMap;
     private PlacesClient placesClient;
     private static String url="https://lamp.ms.wits.ac.za/home/s2115284/projloginn/Check_In.php";
+    private static String url2="https://lamp.ms.wits.ac.za/home/s2115284/projloginn/Res.php";
     private Button Use_location;
     String Longitude="";
     String Latitude="";
     String email;
+    String Date="";
     String isInfected="";
-
+    LatLng ss;
 
     private ImageView mGps;
     private String apiKey= "AIzaSyBvg3J7NuFFI27RFm3o-7wRuLiUL3B1IUM";
@@ -120,6 +160,7 @@ public class Maps extends AppCompatActivity implements OnMapReadyCallback {
         setContentView(R.layout.activity_maps);
         sharedPrefrencesHelper = new SharedPrefrencesHelper(this);
         //mSearchText=(EditText)findViewById(R.id.input_search);
+        list_data=new ArrayList<>();
         mGps=(ImageView) findViewById(R.id.ic_gps);
         Use_location =(Button) findViewById(R.id.Use_location);
         getLocationPermission();
@@ -138,7 +179,7 @@ public class Maps extends AppCompatActivity implements OnMapReadyCallback {
     }
 
 
-    private void geoLocate(){
+    private void geoLocate() throws IOException {
         Log.d(TAG, "geoLocate: GeolOCATTING");
 
         String searchString = mSearchText.getText().toString();
@@ -156,10 +197,10 @@ public class Maps extends AppCompatActivity implements OnMapReadyCallback {
             moveCamera(new LatLng(address.getLatitude(),address.getLongitude()),DEFAULT_ZOOM,address.getAddressLine(0));
         }
     }
-    private void moveCamera(LatLng latlng,float zoom,String title){
-        Log.d(TAG, "moveCamera: Moving tghe Camera to : lat: "+latlng.latitude + ", lng: "+ latlng.longitude);
+    private void moveCamera(LatLng latlng,float zoom,String title) throws IOException {
+        Log.d(TAG, "moveCamera: Moving the Camera to : lat: "+latlng.latitude + ", lng: "+ latlng.longitude);
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latlng,zoom));
-
+        ss=latlng;
         MarkerOptions options = new MarkerOptions().position(latlng).title(title);
         mMap.addMarker(options);
          Latitude =String.valueOf(latlng.latitude);
@@ -183,7 +224,11 @@ public class Maps extends AppCompatActivity implements OnMapReadyCallback {
 
 
                             assert currentLocation != null;
-                            moveCamera(new LatLng(currentLocation.getLatitude(),currentLocation.getLongitude()),DEFAULT_ZOOM,"My Location");
+                            try {
+                                moveCamera(new LatLng(currentLocation.getLatitude(),currentLocation.getLongitude()),DEFAULT_ZOOM,"My Location");
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
 
                         }else{
                             Log.d(TAG, "onComplete: current location is null");
@@ -198,33 +243,9 @@ public class Maps extends AppCompatActivity implements OnMapReadyCallback {
         }
 
     }
-    /*private void init(){
-        Log.d(TAG, "init: Initializing");
-
-        mSearchText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-            @Override
-            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-                if(actionId== EditorInfo.IME_ACTION_SEARCH || actionId==EditorInfo.IME_ACTION_DONE || event.getAction()==KeyEvent.ACTION_DOWN ||event.getAction()==KeyEvent.KEYCODE_ENTER){
-                    //EXECUTE OUR METHOD FOR SEARCHING
-                    geoLocate();
-                    //InitializePlaces();
 
 
-                }
-                return false;
-            }
-        });
-        mGps.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Log.d(TAG, "onClick: clicked gps icon");
-                getDeviceLocation();
-            }
-        });
-        hideSoftKeyboard();
-    }
 
-     */
 
     private void hideSoftKeyboard(){
         this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
@@ -279,13 +300,13 @@ public class Maps extends AppCompatActivity implements OnMapReadyCallback {
         placesClient=Places.createClient(this);
         final AutocompleteSupportFragment autocompleteSupportFragment=(AutocompleteSupportFragment) getSupportFragmentManager().findFragmentById(R.id.place_autocomplete_fragment);
 
-        assert autocompleteSupportFragment != null;
+
         autocompleteSupportFragment.setPlaceFields(Arrays.asList(Place.Field.ID,Place.Field.LAT_LNG,Place.Field.NAME));
         autocompleteSupportFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
             @Override
             public void onPlaceSelected(@NonNull Place place) {
                 final  LatLng latLng=place.getLatLng();
-                assert latLng != null;
+
                 Log.i(TAG, "onPlaceSelected: "+latLng.latitude+"\n"+latLng.longitude);
             }
 
@@ -304,11 +325,12 @@ public class Maps extends AppCompatActivity implements OnMapReadyCallback {
         hideSoftKeyboard();
     }
 
-    private void UseLocation(){
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private void UseLocation() throws IOException {
+        String check =sharedPrefrencesHelper.getDate();
 
-        Log.d(TAG, "UseLocation: LOngitude : "+Longitude);
+        Log.d(TAG, "UseLocation: Longitude is : "+Longitude);
 
-        String email = sharedPrefrencesHelper.getEmail();
 
         StringRequest stringRequest = new StringRequest(Request.Method.POST, url,
                 new Response.Listener<String>() {
@@ -352,17 +374,200 @@ public class Maps extends AppCompatActivity implements OnMapReadyCallback {
             @Override
             protected Map<String, String> getParams() {
                 isInfected =sharedPrefrencesHelper.getIsInfected();
+                Date= sharedPrefrencesHelper.getDate();
+               String email =sharedPrefrencesHelper.getEmail();
                 Map<String, String> params = new HashMap<String, String>();
                 params.put("latitude", Latitude);
                 params.put("longitude", Longitude);
                 params.put("email", email);
-                Log.d(TAG, "getParams: "+ isInfected);
+                Log.d(TAG, "getParams: "+ Date);
                 params.put("isInfected",isInfected);
+                params.put("date",Date);
                 return params;
             }
         };
         rQueue = Volley.newRequestQueue(Maps.this);
         rQueue.add(stringRequest);
+        showAlertDialog2();
     }
+
+    String selection2;
+    private void showAlertDialog() {
+        final AlertDialog.Builder alertDialog = new AlertDialog.Builder(Maps.this);
+
+        alertDialog.setTitle("Would you like to check in using your current Date?");
+        final String[] items = {"Yes","No"};
+        final int checkedItem = -1;
+
+        alertDialog.setSingleChoiceItems(items, checkedItem, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                selection2 = items[which];
+
+            }
+        });
+
+        alertDialog.setPositiveButton("Apply", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                // user clicked Apply
+
+                switch (selection2) {
+                    case ("Yes"):
+                        Toast.makeText(Maps.this, "Selected :  Yes", Toast.LENGTH_LONG).show();
+                        DateFormat dd=new SimpleDateFormat("yyyy-MM-dd");
+                        Date dates= new Date();
+                        sharedPrefrencesHelper.setDate(dd.format(dates));
+                        Date=sharedPrefrencesHelper.getDate();
+                        Log.d(TAG, "    DATE from sharedprefernce: "+Date);
+                        dialog.dismiss();
+
+                        break;
+
+                    case ("No"):
+                        Toast.makeText(Maps.this, "Selected :  NO", Toast.LENGTH_LONG).show();
+                        dialog.dismiss();
+                        showDateDialog();
+                        Log.d(TAG, "onClick: ShowDateDialog");
+
+
+                        break;
+
+                }
+            }
+        });
+
+
+        AlertDialog alert = alertDialog.create();
+        alert.setCanceledOnTouchOutside(false);
+        alert.show();
     }
+
+    String tt="";
+    private void showDateDialog(){
+        Calendar cal=Calendar.getInstance();
+        int year =cal.get(Calendar.YEAR);
+        int month =cal.get(Calendar.MONTH);
+        int day  =cal.get(Calendar.DAY_OF_MONTH);
+
+        mDateSetListener = new DatePickerDialog.OnDateSetListener() {
+            @Override
+            public void onDateSet(DatePicker view, int years, int months, int dayOfMonth) {
+                months+=1;
+                tt=years+"-"+months+"-"+dayOfMonth;
+                Log.d(TAG, "onDateSet: "+tt);
+                sharedPrefrencesHelper.setDate(tt);
+            }
+        };
+        final DatePickerDialog dialog= new DatePickerDialog(Maps.this,android.R.style.Theme_Holo_Light_Dialog_MinWidth,mDateSetListener,year,month,day);
+
+        dialog.setTitle("Select Preferred Check in Date");
+        
+       dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+       dialog.show();
+        Log.d(TAG, "showDateDialog: Just before onDateSet");
+
+
+
+
+    }
+
+    private void getResultData() throws IOException {
+        Log.d(TAG, "getResultData:  getting results DAta");
+
+
+        StringRequest stringRequest=new StringRequest(Request.Method.POST, url2, new Response.Listener<String>() {
+
+            @Override
+            public void onResponse(String response) {
+                try {
+                    response = response.replaceFirst("<font>.*?</font>", "");
+                    int jsonStart = response.indexOf("{");
+                    int jsonEnd = response.lastIndexOf("}");
+
+                    if (jsonStart >= 0 && jsonEnd >= 0 && jsonEnd > jsonStart) {
+                        response = response.substring(jsonStart, jsonEnd + 1);
+                    }
+
+                    JSONObject jsonObject=new JSONObject(response);
+                    JSONArray array=jsonObject.getJSONArray("hello");
+                    sharedPrefrencesHelper.setNo5_infected(array.length());
+                    for (int i=0; i<array.length(); i++ ){
+                        JSONObject ob=array.getJSONObject(i);
+                        Results_Data listData=new Results_Data(ob.getString("EMAIL"));
+                        list_data.add(listData);
+                        Log.d(TAG, "onResponse: List Data is : "+list_data.get(0));
+
+                    }
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+
+            }
+        }){
+            @Override
+            protected Map<String, String> getParams() {
+                isInfected =sharedPrefrencesHelper.getIsInfected();
+                Date= sharedPrefrencesHelper.getDate();
+                String email= sharedPrefrencesHelper.getEmail();
+                Log.d(TAG, "getParams: Putting values in Blah");
+                Map<String, String> params = new HashMap<String, String>();
+                params.put("latitude", Latitude);
+                params.put("longitude", Longitude);
+                params.put("email", email);
+                params.put("date",Date);
+                params.put("isInfected",isInfected);
+                return params;
+            }
+        }
+        ;
+        RequestQueue requestQueue= Volley.newRequestQueue(this);
+        requestQueue.add(stringRequest);
+
+
+
+    }
+
+
+
+
+    private void showAlertDialog2() throws IOException {
+        final AlertDialog.Builder alertDialog = new AlertDialog.Builder(Maps.this);
+        alertDialog.setTitle("Information regarding CHeck-in");
+        String j= sharedPrefrencesHelper.getAddress();
+        int k=sharedPrefrencesHelper.getNo_5_infected();
+        final String[] items = {""+j,""+k};
+        Log.d(TAG, "showAlertDialog2: "+j +"  :"+k);
+        final int checkedItem = -1;
+
+
+        alertDialog.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                // user clicked Apply
+
+               dialog.dismiss();
+            }
+        });
+
+
+        AlertDialog alert = alertDialog.create();
+        alert.setCanceledOnTouchOutside(false);
+        alert.show();
+    }
+
+}
+
+
+
+
+
+
+
 

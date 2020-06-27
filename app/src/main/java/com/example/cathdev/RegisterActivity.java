@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -22,7 +23,7 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Map;
 public class RegisterActivity<RequestQueue> extends AppCompatActivity {
-
+     CheckBox checkBox;
     TextView loginTV;
     EditText fisrtName, lastName, username, email, password, password1;
     Button registerBtn;
@@ -43,6 +44,7 @@ public class RegisterActivity<RequestQueue> extends AppCompatActivity {
         password = findViewById(R.id.password);
         password1 = findViewById(R.id.password1);
         registerBtn = findViewById(R.id.registerBtn);
+        checkBox=findViewById(R.id.checkbox1);
 
         loginTV.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -65,6 +67,14 @@ public class RegisterActivity<RequestQueue> extends AppCompatActivity {
         final String mail = email.getText().toString();
         final String pswd = password.getText().toString();
         final String pswd1 = password1.getText().toString();
+
+
+        if(!checkBox.isChecked()){
+            checkBox.setError("You have to agree to terms to proceed");
+            checkBox.requestFocus();
+            return;
+        }
+
         if (fname.isEmpty()) {
             fisrtName.setError("First name is required");
             fisrtName.requestFocus();
