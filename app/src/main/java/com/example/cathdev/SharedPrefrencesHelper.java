@@ -49,7 +49,7 @@ public class SharedPrefrencesHelper {
 
     public void setAddress(String Address) {
         SharedPreferences.Editor edit = sharedPreferences.edit();
-        edit.putString(String.valueOf(this.Address), Address);
+        edit.putString(this.Address, Address);
         edit.commit();
     }
 

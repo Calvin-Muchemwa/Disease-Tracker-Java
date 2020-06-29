@@ -1,9 +1,8 @@
 package com.example.cathdev;
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.app.DatePickerDialog;
+import android.app.Dialog;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
@@ -13,10 +12,8 @@ import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.View;
 import android.view.WindowManager;
-import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
@@ -28,7 +25,6 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -57,9 +53,6 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.time.DateTimeException;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -79,9 +72,11 @@ import androidx.core.content.ContextCompat;
 
 public class Maps extends AppCompatActivity implements OnMapReadyCallback {
     private com.android.volley.RequestQueue rQueue;
+    Dialog myDialog;
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
+
         Toast.makeText(this, "Map is Ready", Toast.LENGTH_SHORT).show();
         Log.d(TAG, "onMapReady: map is ready");
         mMap = googleMap;
@@ -101,8 +96,10 @@ public class Maps extends AppCompatActivity implements OnMapReadyCallback {
                 @Override
                 public void onClick(View v) {
 
+
                     try {
                         UseLocation();
+
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -110,14 +107,16 @@ public class Maps extends AppCompatActivity implements OnMapReadyCallback {
 
                     try {
                         getResultData();
+
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
 
 
                 }
-            });
 
+
+            });
 
         }
 
@@ -131,6 +130,7 @@ public class Maps extends AppCompatActivity implements OnMapReadyCallback {
     private static final float DEFAULT_ZOOM=15f;
     private static final LatLngBounds LAT_LNG_BOUNDS=new LatLngBounds(new LatLng(-40,-168),new LatLng(71,136));
     //variables
+
     private List<Results_Data>list_data;
     private Boolean mLocationPermissionGranted= false;
     private FusedLocationProviderClient mFusedLocationProviderClient;
@@ -142,7 +142,7 @@ public class Maps extends AppCompatActivity implements OnMapReadyCallback {
     String Longitude="";
     String Latitude="";
     String email;
-    String Date="";
+    String Date="",Addy="";
     String isInfected="";
     LatLng ss;
 
@@ -205,7 +205,6 @@ public class Maps extends AppCompatActivity implements OnMapReadyCallback {
         mMap.addMarker(options);
          Latitude =String.valueOf(latlng.latitude);
          Longitude = String.valueOf(latlng.longitude);
-
         hideSoftKeyboard();
     }
 
@@ -297,6 +296,7 @@ public class Maps extends AppCompatActivity implements OnMapReadyCallback {
             Places.initialize(getApplicationContext(),apiKey);
 
         }
+
         placesClient=Places.createClient(this);
         final AutocompleteSupportFragment autocompleteSupportFragment=(AutocompleteSupportFragment) getSupportFragmentManager().findFragmentById(R.id.place_autocomplete_fragment);
 
@@ -388,7 +388,10 @@ public class Maps extends AppCompatActivity implements OnMapReadyCallback {
         };
         rQueue = Volley.newRequestQueue(Maps.this);
         rQueue.add(stringRequest);
-        showAlertDialog2();
+        Address_get();
+
+
+
     }
 
     String selection2;
@@ -462,7 +465,7 @@ public class Maps extends AppCompatActivity implements OnMapReadyCallback {
         final DatePickerDialog dialog= new DatePickerDialog(Maps.this,android.R.style.Theme_Holo_Light_Dialog_MinWidth,mDateSetListener,year,month,day);
 
         dialog.setTitle("Select Preferred Check in Date");
-        
+
        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
        dialog.show();
         Log.d(TAG, "showDateDialog: Just before onDateSet");
@@ -473,14 +476,16 @@ public class Maps extends AppCompatActivity implements OnMapReadyCallback {
     }
 
     private void getResultData() throws IOException {
-        Log.d(TAG, "getResultData:  getting results DAta");
 
+        Log.d(TAG, "getResultData:  getting results DAta");
 
         StringRequest stringRequest=new StringRequest(Request.Method.POST, url2, new Response.Listener<String>() {
 
             @Override
             public void onResponse(String response) {
+
                 try {
+
                     response = response.replaceFirst("<font>.*?</font>", "");
                     int jsonStart = response.indexOf("{");
                     int jsonEnd = response.lastIndexOf("}");
@@ -489,10 +494,15 @@ public class Maps extends AppCompatActivity implements OnMapReadyCallback {
                         response = response.substring(jsonStart, jsonEnd + 1);
                     }
 
-                    JSONObject jsonObject=new JSONObject(response);
-                    JSONArray array=jsonObject.getJSONArray("hello");
+
+
+                   JSONObject jsonObject=new JSONObject(response);
+                    JSONArray array=  jsonObject.getJSONArray("hello");
+                    Log.d(TAG, "onResponse: Array length : "+array.length() );
                     sharedPrefrencesHelper.setNo5_infected(array.length());
+
                     for (int i=0; i<array.length(); i++ ){
+
                         JSONObject ob=array.getJSONObject(i);
                         Results_Data listData=new Results_Data(ob.getString("EMAIL"));
                         list_data.add(listData);
@@ -531,36 +541,54 @@ public class Maps extends AppCompatActivity implements OnMapReadyCallback {
         requestQueue.add(stringRequest);
 
 
+        ShowPopUp();
 
     }
 
 
 
 
-    private void showAlertDialog2() throws IOException {
-        final AlertDialog.Builder alertDialog = new AlertDialog.Builder(Maps.this);
-        alertDialog.setTitle("Information regarding CHeck-in");
-        String j= sharedPrefrencesHelper.getAddress();
-        int k=sharedPrefrencesHelper.getNo_5_infected();
-        final String[] items = {""+j,""+k};
-        Log.d(TAG, "showAlertDialog2: "+j +"  :"+k);
-        final int checkedItem = -1;
+    private void ShowPopUp(){
+        myDialog=new Dialog(this);
+        myDialog.setContentView(R.layout.popup);
+
+        TextView txtclose = (TextView) myDialog.findViewById(R.id.exitPop);
+        TextView txtdate = (TextView) myDialog.findViewById(R.id.txtdate);
+       TextView txtNo_ppl = (TextView) myDialog.findViewById(R.id.txtNo_ppl);
+        TextView txtAddress = (TextView) myDialog.findViewById(R.id.txtAddress);
+        txtAddress.setText(" Address: "+Addy);
+        txtdate.setText("Date: "+sharedPrefrencesHelper.getDate());
+
+        txtNo_ppl.setText("Number of Infected Users within a Radius of 5Km: "+Integer.toString(sharedPrefrencesHelper.getNo_5_infected()));
+        txtclose.setOnClickListener(new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            myDialog.dismiss();
+        }
+    });
 
 
-        alertDialog.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                // user clicked Apply
-
-               dialog.dismiss();
-            }
-        });
+    myDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+    myDialog.show();
+}
 
 
-        AlertDialog alert = alertDialog.create();
-        alert.setCanceledOnTouchOutside(false);
-        alert.show();
+
+
+
+    private void Address_get() throws IOException {
+
+        LatLng jj=ss;
+        Geocoder geocoder;
+        geocoder = new Geocoder(Maps.this, Locale.getDefault());
+        List<Address> addresses = geocoder.getFromLocation(jj.latitude, jj.longitude, 1); // Here 1 represent max location result to returned, by documents it recommended 1 to 5
+        String address = addresses.get(0).getAddressLine(0); // If any additional address line present than only, check with max available address lines by getMaxAddressLineIndex()
+        Addy=address;
+        Log.d(TAG, "Address_get: Addy "+address);
     }
+
+
+
 
 }
 

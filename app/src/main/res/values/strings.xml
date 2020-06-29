@@ -13,4 +13,7 @@
     <string name="already_a_member_login_here">Already a member? Login Here</string>
     <string name="firstname">FirstName</string>
     <string name="todo">TODO</string>
+    <string name="your_check_in_statistics">Your Check-In Statistics</string>
+    <string name="your_check_in_statistics1">Your Check-In Statistics</string>
+    <string name="your_check_in_statistics2">Your Check-In Statistics</string>
 </resources>

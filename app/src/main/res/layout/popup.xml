@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:layout_width="350dp"
+    android:layout_height="475dp"
+    android:background="@color/transparent"
+    android:padding="5dp"
+    android:layout_gravity="center"
+    >
+
+    <TextView
+        android:id="@+id/exitPop"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_gravity="end"
+        android:background="@drawable/circle_bg"
+        android:gravity="center"
+        android:text="X"
+
+        android:textColor="@color/colorPrimary"
+        android:textSize="18sp"
+        android:textStyle="bold"
+
+        />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="167dp"
+            android:layout_gravity="center"
+            android:background="@color/transparent"
+            android:src="@drawable/globe" />
+
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="24dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="5dp"
+            android:text="Your Check-In Statistics :"
+            android:textColor="@color/colorPrimaryDark"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+        <TextView
+            android:id="@+id/txtdate"
+            android:layout_width="wrap_content"
+            android:layout_height="24dp"
+            android:text="your_check_in_statistics"
+            android:textColor="#F51B00"
+            android:textStyle="bold"
+            android:layout_marginTop="5dp"
+            tools:ignore="PrivateResource" />
+        <TextView
+            android:id="@+id/txtAddress"
+            android:layout_width="wrap_content"
+            android:layout_height="34dp"
+            android:text="your_check_in_statistics"
+            android:textColor="#39FF14"
+            android:textStyle="bold"
+            android:layout_marginTop="5dp"
+            tools:ignore="PrivateResource" />
+
+        <TextView
+            android:id="@+id/txtNo_ppl"
+            android:layout_width="wrap_content"
+            android:layout_height="24dp"
+            android:text="your_check_in_statistics"
+            android:textColor="#F51B00"
+            android:textStyle="bold"
+            android:layout_marginTop="10dp"
+            tools:ignore="PrivateResource" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_marginTop="5dp"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_weight="1"
+            android:layout_width="0dp"
+            android:layout_height="100dp">
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/vid"/>
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>
