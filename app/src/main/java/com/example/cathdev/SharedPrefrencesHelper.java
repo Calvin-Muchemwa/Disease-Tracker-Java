@@ -2,13 +2,15 @@ package com.example.cathdev;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.Log;
 
 public class SharedPrefrencesHelper {
 
+    private static final String ID = "";
     private SharedPreferences sharedPreferences;
     private Context context;
     private int No5_infected;
-    private String firstname = "firstname", lastname = "lastname", username = "username", email = "email",isInfected="YES/NO/NOT SURE", Date="",Address="";
+    private String firstname = "firstname", lastname = "lastname", username = "username", email = "email",isInfected="YES/NO/NOT SURE", Date="",Address="",ADDZ="";
     public SharedPrefrencesHelper(Context context) {
         this.sharedPreferences = context.getSharedPreferences("login_session",
                 Context.MODE_PRIVATE);
@@ -32,7 +34,18 @@ public class SharedPrefrencesHelper {
     public String  getIsInfected(){ return sharedPreferences.getString(isInfected,"");}
     public String getAddress(){return sharedPreferences.getString(Address,"");}
     public int getNo_5_infected(){return sharedPreferences.getInt(String.valueOf(No5_infected),0);}
+    public String getADDZ(){return sharedPreferences.getString(ADDZ, "");}
+    public String getID(){return sharedPreferences.getString(ID, "");}
 
+
+
+
+    public void setADDZ(String ADDZ) {
+        SharedPreferences.Editor edit = sharedPreferences.edit();
+        edit.putString(this.ADDZ, ADDZ);
+        Log.d("AYTTA", "setADDZ: Setting ADDZ TO: "+ADDZ);
+        edit.commit();
+    }
 
     public void setIsInfected(String isInfected) {
         SharedPreferences.Editor edit = sharedPreferences.edit();
@@ -78,6 +91,12 @@ public class SharedPrefrencesHelper {
     public void setEmail(String email) {
         SharedPreferences.Editor edit = sharedPreferences.edit();
         edit.putString(this.email, email);
+        edit.commit();
+    }
+
+    public void setID(String id) {
+        SharedPreferences.Editor edit = sharedPreferences.edit();
+        edit.putString(this.ID, id);
         edit.commit();
     }
 }

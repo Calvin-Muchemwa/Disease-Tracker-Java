@@ -10,13 +10,13 @@
         android:id="@+id/nav_fav"
         android:enabled="true"
 
-        android:icon="@drawable/ic_android_black_24dp"
-        android:title="@string/favs" />
+        android:icon="@drawable/screening"
+        android:title="Screening" />
     <item
         android:enabled="true"
         android:id="@+id/nav_cc"
-        android:icon="@drawable/ic_insert_emoticon_black_24dp"
-        android:title="@string/smile" />
+        android:icon="@drawable/user"
+        android:title="Profile" />
 
 
 </menu>

@@ -41,10 +41,12 @@ public class LoginActivity extends AppCompatActivity {
         password = findViewById(R.id.password);
         loginBtn = findViewById(R.id.loginBtn);
         sharedPrefrencesHelper = new SharedPrefrencesHelper(this);
+
         registerTV.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 startActivity(new Intent(getBaseContext(), RegisterActivity.class));
+                finish();
             }
         });
         loginBtn.setOnClickListener(new View.OnClickListener() {
@@ -57,6 +59,9 @@ public class LoginActivity extends AppCompatActivity {
 
 
     }
+
+    ///login
+
     private void loginAction() {
         final String userr = user.getText().toString();
         final String pswd = password.getText().toString();
@@ -98,7 +103,7 @@ public class LoginActivity extends AppCompatActivity {
                                 sharedPrefrencesHelper.setLastname(jsonObject1.getString("LASTNAME"));
                                 sharedPrefrencesHelper.setUsername(jsonObject1.getString("USERNAME"));
                                 sharedPrefrencesHelper.setEmail(jsonObject1.getString("EMAIL"));
-
+                                sharedPrefrencesHelper.setID(jsonObject1.getString("ID"));
                                 Toast.makeText(LoginActivity.this, "Login Successfull! ", Toast.LENGTH_SHORT).show();
                                 openHome();
 
@@ -137,5 +142,6 @@ public class LoginActivity extends AppCompatActivity {
     private void openHome(){
         Intent i = new Intent(LoginActivity.this,MainActivity.class);
         startActivity(i);
+        finish();
     }
 }

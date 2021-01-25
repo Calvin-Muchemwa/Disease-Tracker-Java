@@ -1,19 +1,24 @@
 package com.example.cathdev;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-
+import androidx.appcompat.widget.Toolbar;
 import android.Manifest;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.location.Address;
+import android.location.Geocoder;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Looper;
 import android.util.Log;
+import androidx.appcompat.widget.Toolbar;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
@@ -21,6 +26,13 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.location.LocationCallback;
@@ -30,18 +42,34 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+
 public class MainActivity extends AppCompatActivity implements BottomNavigationView.OnNavigationItemSelectedListener {
+
+
     private static final String TAG = "Maps";
     private static final int ERROR_DIALOG_REQUEST=9001;
-    private static final int REQUEST_CODE_LOCATION_PERMISSION=1;
+    private Toolbar toolbar;
+    private com.android.volley.RequestQueue rQueue;
     ////
    private BottomNavigationView bottomNavigationView;
     private SharedPrefrencesHelper sharedPrefrencesHelper;
     /////
-    TextView firstname, lastname, usernamee, email,textLatLong;
-    private ProgressBar progressBar;
-    Button logoutBtn;
-
+   private  TextView firstname, lastname, usernamee, email,textLatLong;
+   private ProgressBar progressBar;
+  private   Button logoutBtn;
+  private String ADDZ="";
+  private String url2="https://lamp.ms.wits.ac.za/home/s2115284/projloginn/Top3Loc.php";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,39 +77,20 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
         setContentView(R.layout.activity_main);
         sharedPrefrencesHelper = new SharedPrefrencesHelper(this);
         String username = sharedPrefrencesHelper.getUsername();
+        toolbar=(Toolbar)findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
 
-        if (username == null || username.isEmpty()) {
+
+        /*if (username == null || username.isEmpty()) {
             startActivity(new Intent(this, LoginActivity.class));
             finish();
         }
 
+         */
+
         showAlertDialog();// pop up
 
 
-
-
-
-        /*
-        firstname = findViewById(R.id.firstname);
-        lastname = findViewById(R.id.lastname);
-        usernamee = findViewById(R.id.username);
-        email = findViewById(R.id.email);
-        logoutBtn = findViewById(R.id.logoutBtn);
-        firstname.setText(sharedPrefrencesHelper.getFirstname());
-        lastname.setText(sharedPrefrencesHelper.getLastname());
-        usernamee.setText(sharedPrefrencesHelper.getUsername());
-        email.setText(sharedPrefrencesHelper.getEmail());
-        logoutBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                sharedPrefrencesHelper.setFirstname(null);
-                sharedPrefrencesHelper.setLastname(null);
-                sharedPrefrencesHelper.setUsername(null);
-                sharedPrefrencesHelper.setEmail(null);
-                startActivity(new Intent(MainActivity.this, LoginActivity.class));
-                finish();
-            }
-        });*/
 
         bottomNavigationView = findViewById(R.id.bottomNavigationView);
         bottomNavigationView.setOnNavigationItemSelectedListener(this);
@@ -119,7 +128,14 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
                 getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,homefragment).commit();
                 return true;
             case R.id.nav_fav:
+
+                try {
+                    getResultAddress();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,screeningfragment).commit();
+
                 return true;
 
         }
@@ -201,5 +217,109 @@ String selection;
         }
         return false;
     }
+///Functions to use for varibles for fragment String Request
+    public String getUsernamez(){
+        return sharedPrefrencesHelper.getUsername();
 
+    }
+    public String getEmailz(){
+        return sharedPrefrencesHelper.getEmail();
+
+    }
+
+    public String getFL(){
+        String FL="";
+        FL +=sharedPrefrencesHelper.getFirstname();
+        FL+=" ";
+        FL+=sharedPrefrencesHelper.getLastname();
+return FL;
+    }
+    public String getID(){
+        return sharedPrefrencesHelper.getID();
+
+    }
+    public String getADDZ(){
+        return sharedPrefrencesHelper.getADDZ();
+
+    }
+    private void getResultAddress() throws IOException {
+
+
+
+
+        StringRequest stringRequest=new StringRequest(Request.Method.POST, url2, new Response.Listener<String>() {
+
+            @Override
+            public void onResponse(String response) {
+
+                try {
+
+                    response = response.replaceFirst("<font>.*?</font>", "");
+                    int jsonStart = response.indexOf("{");
+                    int jsonEnd = response.lastIndexOf("}");
+
+                    if (jsonStart >= 0 && jsonEnd >= 0 && jsonEnd > jsonStart) {
+                        response = response.substring(jsonStart, jsonEnd + 1);
+                    }
+
+
+
+                    JSONObject jsonObject=new JSONObject(response);
+                    JSONArray array=  jsonObject.getJSONArray("hello");
+
+                    Log.d("GET", "onResponse: Getting address json array");
+
+                    for (int i=0; i<array.length(); i++ ){
+
+                        JSONObject ob=array.getJSONObject(i);
+                        double Latitude = ob.getDouble("LATITUDE");
+                        double Longitude = ob.getDouble("LONGITUDE");
+                        String Addy=Address_get(Latitude,Longitude);//CONVERT  LATITUDE AND LONGITUDE FROM SERVER TO ADDY
+                        //Addys.add(Addy);
+                        ADDZ+=Addy;
+                        ADDZ+="\n";
+                        Log.d("ADD", "onResponse: "+ADDZ);
+
+
+
+
+                    }
+                    Log.d(TAG, "onResponse: setting sharedpref ADDZ TO : " +ADDZ);
+                    sharedPrefrencesHelper.setADDZ(ADDZ);
+
+                } catch (JSONException | IOException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+
+            }
+        }){
+            @Override
+            protected Map<String, String> getParams() {
+
+
+                Map<String, String> params = new HashMap<String, String>();
+                params.put("email",getEmailz());
+
+                return params;
+            }
+        };
+
+
+        rQueue = Volley.newRequestQueue(MainActivity.this);
+        rQueue.add(stringRequest);
+
+    }
+    private String Address_get(double latitude,double longitude) throws IOException {
+        Geocoder geocoder;
+        geocoder = new Geocoder(MainActivity.this, Locale.getDefault());
+        List<Address> addresses = geocoder.getFromLocation(latitude, longitude, 1); // Here 1 represent max location result to returned, by documents it recommended 1 to 5
+        String address = addresses.get(0).getAddressLine(0); // If any additional address line present than only, check with max available address lines by getMaxAddressLineIndex()
+
+        return address;
+    }
 }

@@ -291,6 +291,9 @@ public class Maps extends AppCompatActivity implements OnMapReadyCallback {
         }
     }
 
+
+
+//Initialize places for autocomplete fragment
     private void InitializePlaces(){
         if(!Places.isInitialized()){
             Places.initialize(getApplicationContext(),apiKey);
@@ -310,6 +313,7 @@ public class Maps extends AppCompatActivity implements OnMapReadyCallback {
                 Log.i(TAG, "onPlaceSelected: "+latLng.latitude+"\n"+latLng.longitude);
             }
 
+
             @Override
             public void onError(@NonNull Status status) {
 
@@ -326,6 +330,7 @@ public class Maps extends AppCompatActivity implements OnMapReadyCallback {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
+
     private void UseLocation() throws IOException {
         String check =sharedPrefrencesHelper.getDate();
 
@@ -586,7 +591,6 @@ public class Maps extends AppCompatActivity implements OnMapReadyCallback {
         Addy=address;
         Log.d(TAG, "Address_get: Addy "+address);
     }
-
 
 
 
